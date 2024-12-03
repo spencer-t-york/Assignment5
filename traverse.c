@@ -203,7 +203,7 @@ void ls(char dirname[], int a, int l) {
     closedir(dir_ptr);
 }
 
-int main(int argc, char *argv[]) {
+int traverse(int argc, char *argv[]) {
     if (argc < 2 || argc > 3) {
         printf("usage: ls directory_name\n");
     }
