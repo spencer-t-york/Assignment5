@@ -17,6 +17,8 @@ int main(int argc, char *argv[]) {
   help();
 }
 
+
+// help
 void help() {
   printf("These are the minix commands that can used:\n");
   printf("\n  help          show the supported commands in this minix console");
