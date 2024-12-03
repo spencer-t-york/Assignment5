@@ -1,3 +1,4 @@
+#include "traverse.h"
 #include <stdio.h>
 #include <unistd.h>
 
@@ -5,9 +6,9 @@
 // help
 void help();
 // minimount
-int minimount
 // miniumount
 // showsuper
+
 // traverse
 // showzone
 // showfile
@@ -18,6 +19,7 @@ int minimount
 
 int main(int argc, char *argv[]) {
   help();
+  traverse(argc, argv);
 }
 
 
