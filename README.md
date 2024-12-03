@@ -322,6 +322,25 @@ Superblock:         Contains metadata about the file system.
 Group Descriptors:  Contains pointers to the bitmaps, inode table, etc.
 Block Bitmap:       Bitmap to track free/used blocks.
 Inode Bitmap:       Bitmap to track free/used inodes.
-Inode Table:        Array of inodes storing file metadata.
+Inode Table:        Array of inodes storing file metadata (e.g., size, permissions, pointers to data blocks).
 Data Blocks:        Blocks where file and directory content is stored.
 ```
+- `lseek()` is used to move between blocks within the disk image file.
+
+- **help:** 5 points
+  - Prints the commands supported in this minix console.
+- **minimount:** 5 points
+  - opens the disk image file for reading
+- **miniumount:** 5 points
+  - closes the disk image file, with `close(fd);`
+- **showsuper:** 20 points
+  - Calls `read()` and takes the predefined values from superblock in the disk image file, and assigns them to the superblock struct I made.
+  - This then prints out all of the properties.
+- **traverse:** 40 points
+  - This is just the `ls` command. Double check, though.
+- **showzone:** 10 points
+- **showfile (Bonus):** Up to 20 points  
+- **quit:** 5 points  
+- **README/Makefile:** 10 points  
+
+
