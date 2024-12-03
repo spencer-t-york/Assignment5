@@ -1,27 +1,30 @@
 # **Project 5: A Minix Disk Program**
 
-This project involves developing a Minix Disk program that allows users to access a Minix disk locally mounted on a computer. You are required to use the **C programming language**. All Minix file I/O operations in your program must exclusively use system calls discussed in class, such as `open()`, `close()`, `read()`, and `lseek()`. **Do not use library functions like `fopen()`, `fclose()`, or `fread()`** for file I/O operations.
+You are asked to develop a Minix Disk program that allows users to access a Minix disk locally mounted on a computer. You are expected to use C programming language. In your program, all Minix file I/O related operations must use the system calls discussed in our lectures, including `open()`, `close()`, `read()`, `lseek()`, and you should not use those library functions, like `fopen()`, `fclose()`, `fread()`, and etc, for doing file I/O. 
+
+${\color{red}In \space this \space project, \space you \space may \space assume \space the \space block \space size \space if \space 1024 \space bytes.}$
+
 
 ---
 
 ## **Required Modules**
 
-### 1. **Minix Client Environment (Minix Console)**  
-The console provides an interface for users to operate on a Minix disk using the following commands:
+### **Minix Client Environment (Minix Console)**  
+The console (interface) that allows users to operate on a minix disk by using the following commands:
 
 ---
 
 ### **help**  
-**Points:** 5  
-Prints the commands supported in this Minix console.
+**Points:** 5 
+Prints the commands supported in this minix console.
 
 ---
 
 ### **minimount [image file]**  
 **Points:** 5  
-Mounts a local Minix disk, referred to as a Minix image file, e.g., `imagefile.img`.
+mount a local minix disk, name as a iminix image file, e.g. `imagefile.img`.
 
-**Hint:** Mounting a disk image is equivalent to opening the image file. Use `lseek()` to move the file marker to the desired position to read the data.
+***Hint:** Mounting a disk image is equivalent to opening the image file. Use `lseek()` to move the file marker to the desired position to read the data.*
 
 ---
 
@@ -108,31 +111,31 @@ drwx------ 1000 128 Oct 27  2014 dir1
 -rw-r--r-- 1000 278 Dec 14  2010 some.java
 ```
 
-**Hint:** The `mode` field in the inode structure (a 2-byte unsigned integer) uses the following flags:  
+***Hint:** The `mode` field in the inode structure (a 2-byte unsigned integer) uses the following flags:* 
 ```c
-           S_IFMT     0170000   bit mask for the file type bit fields
-           S_IFSOCK   0140000   socket
-           S_IFLNK    0120000   symbolic link
-           S_IFREG    0100000   regular file
-           S_IFBLK    0060000   block device
-           S_IFDIR    0040000   directory
-           S_IFCHR    0020000   character device
-           S_IFIFO    0010000   FIFO
-           S_ISUID    0004000   set-user-ID bit
-           S_ISGID    0002000   set-group-ID bit (see below)
-           S_ISVTX    0001000   sticky bit (see below)
-           S_IRWXU    00700     mask for file owner permissions
-           S_IRUSR    00400     owner has read permission
-           S_IWUSR    00200     owner has write permission
-           S_IXUSR    00100     owner has execute permission
-           S_IRWXG    00070     mask for group permissions
-           S_IRGRP    00040     group has read permission
-           S_IWGRP    00020     group has write permission
-           S_IXGRP    00010     group has execute permission
-           S_IRWXO    00007     mask for permissions for others (not in group)
-           S_IROTH    00004     others have read permission
-           S_IWOTH    00002     others have write permission
-           S_IXOTH    00001     others have execute permission
+S_IFMT     0170000   bit mask for the file type bit fields
+S_IFSOCK   0140000   socket
+S_IFLNK    0120000   symbolic link
+S_IFREG    0100000   regular file
+S_IFBLK    0060000   block device
+S_IFDIR    0040000   directory
+S_IFCHR    0020000   character device
+S_IFIFO    0010000   FIFO
+S_ISUID    0004000   set-user-ID bit
+S_ISGID    0002000   set-group-ID bit (see below)
+S_ISVTX    0001000   sticky bit (see below)
+S_IRWXU    00700     mask for file owner permissions
+S_IRUSR    00400     owner has read permission
+S_IWUSR    00200     owner has write permission
+S_IXUSR    00100     owner has execute permission
+S_IRWXG    00070     mask for group permissions
+S_IRGRP    00040     group has read permission
+S_IWGRP    00020     group has write permission
+S_IXGRP    00010     group has execute permission
+S_IRWXO    00007     mask for permissions for others (not in group)
+S_IROTH    00004     others have read permission
+S_IWOTH    00002     others have write permission
+S_IXOTH    00001     others have execute permission
 
 ```
 
@@ -140,7 +143,7 @@ drwx------ 1000 128 Oct 27  2014 dir1
 
 ### **showzone [zone number]**  
 **Points:** 10  
-Displays the ASCII content of the specified zone number (1024 bytes per zone). Non-ASCII values should be displayed as spaces. Use the `isprint()` library function to check ASCII values.  
+Displays the ASCII content of the specified zone number (1024 bytes per zone). Non-ASCII values should be displayed as spaces. Use the `isprint()` library function to check if the given byte is an ASCII value.  
 
 **Example:**  
 ```bash
@@ -219,7 +222,7 @@ minix: showzone 112
 
 ### **[Bonus] showfile [filename]**  
 **Points:** Up to 20 (Bonus)  
-Displays the content of a specified file located in the root directory. Assumes the file size is less than 7KB.  
+Displays the content of a specified file (in hex) located in the root directory. Assumes the file size is less than 7KB.  
 
 **Behavior:**  
 - If the file is found, display its contents in hexadecimal format.  
@@ -266,7 +269,7 @@ minix: showfile Aloop1.jav
 
 ### **quit**  
 **Points:** 5  
-quit the minix console.
+Quits the minix console.
 
 ---
 
