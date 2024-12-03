@@ -3,6 +3,7 @@
 
 // DEFINE FUNCTIONS
 // help
+void help();
 // minimount
 // miniumount
 // showsuper
@@ -13,7 +14,7 @@
 
 
 int main(int argc, char *argv[]) {
-  
+  help();
 }
 
 void help() {
@@ -25,7 +26,7 @@ void help() {
   printf("\n  traverse      Lists the contents of the root directory");
   printf("\n  showzone      Displays the ASCII content of the specified zone number. Non-ASCII values are displayed as spaces");
   printf("\n  showfile      Displays the content of a specified file (in hex) located in the root directory. Assumes the file size is less than 7KB");
-  printf("\   quit          Quits the minix console");
+  printf("\n   quit          Quits the minix console");
 
 }
 // minimount
