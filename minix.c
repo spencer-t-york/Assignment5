@@ -5,6 +5,7 @@
 // help
 void help();
 // minimount
+int minimount
 // miniumount
 // showsuper
 // traverse
@@ -12,6 +13,8 @@ void help();
 // showfile
 // quit
 
+// make the superblock struct
+// make the inode struct
 
 int main(int argc, char *argv[]) {
   help();
@@ -32,9 +35,17 @@ void help() {
 
 }
 // minimount
+//     this opens the disk image file for reading with open()
 // miniumount
+//     this closes the disk image file using close(fd)
 // showsuper
+//     this just calls read(fd, superblock, sizeof(struct superblock));
+//     and then a bunch of print statements to print out all of the properties of the superblock
 // traverse
+//     I think this is just ls command which I've done already in CIS 340
 // showzone
+//     Not sure what this is yet...
 // showfile
+//     Not sure what this is yet...
 // quit
+//     just break out of program loop
