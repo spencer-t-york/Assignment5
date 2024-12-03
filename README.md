@@ -298,3 +298,30 @@ You are required to create a README file that includes:
 **Total:** 100 points (+20 bonus)
 
 ---
+
+
+
+# Project Notes
+## General structure of `imagefile.img`:
+```
++--------------------+
+| Block 0            | -> Superblock
++--------------------+
+| Block 1            | -> Group Descriptors
++--------------------+
+| Block 2            | -> Block Bitmap
++--------------------+
+| Block 3            | -> Inode Bitmap
++--------------------+
+| Blocks 4-8         | -> Inode Table
++--------------------+
+| Blocks 9-N         | -> Data Blocks
++--------------------+
+
+Superblock:         Contains metadata about the file system.
+Group Descriptors:  Contains pointers to the bitmaps, inode table, etc.
+Block Bitmap:       Bitmap to track free/used blocks.
+Inode Bitmap:       Bitmap to track free/used inodes.
+Inode Table:        Array of inodes storing file metadata.
+Data Blocks:        Blocks where file and directory content is stored.
+```
