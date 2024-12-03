@@ -10,7 +10,7 @@ struct files { // linked list to point to dirent struct for sorting
 };
 
 struct files *sort(struct files *);
-void mode_to_str(mode_t mode, char *);
+void mode_to_str(mode_t, char *);
 const char* numberToMonth(int);
 void printFiles(struct files *);
 void printFilesL(struct files *, const char *);
