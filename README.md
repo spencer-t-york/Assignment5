@@ -14,13 +14,13 @@ The console (interface) that allows users to operate on a minix disk by using th
 
 ---
 
-### **help**  
+### ✅ **help**  
 **Points:** 5 
 Prints the commands supported in this minix console.
 
 ---
 
-### **minimount [image file]**  
+### ✅ **minimount [image file]**  
 **Points:** 5  
 mount a local minix disk, name as a iminix image file, e.g. `imagefile.img`.
 
@@ -28,13 +28,13 @@ mount a local minix disk, name as a iminix image file, e.g. `imagefile.img`.
 
 ---
 
-### **miniumount**  
+### ✅ **miniumount**  
 **Points:** 5  
 Unmounts the mounted Minix disk.
 
 ---
 
-### **showsuper**  
+### ✅ **showsuper**  
 **Points:** 20  
 Displays information about the superblock.  
 
@@ -58,7 +58,7 @@ zones:                  0
 
 ---
 
-### **traverse [-l]**  
+### ⚠️ **traverse [-l]**  
 **Points:** 40  
 Lists the contents of the root directory (excluding `.` and `..`).
 
@@ -141,7 +141,7 @@ S_IXOTH    00001     others have execute permission
 
 ---
 
-### **showzone [zone number]**  
+### ⚠️ **showzone [zone number]**  
 **Points:** 10  
 Displays the ASCII content of the specified zone number (1024 bytes per zone). Non-ASCII values should be displayed as spaces. Use the `isprint()` library function to check if the given byte is an ASCII value.  
 
@@ -220,7 +220,7 @@ minix: showzone 112
 
 ---
 
-### **[Bonus] showfile [filename]**  
+### ⚠️ **[Bonus] showfile [filename]**  
 **Points:** Up to 20 (Bonus)  
 Displays the content of a specified file (in hex) located in the root directory. Assumes the file size is less than 7KB.  
 
