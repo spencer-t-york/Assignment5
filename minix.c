@@ -4,6 +4,32 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// DEFINE STRUCTS
+// superblock struct
+typedef struct superBlock {
+    unsigned short s_ninodes;
+    unsigned short s_nzones;
+    unsigned short s_imap_blocks;
+    unsigned short s_zmap_blocks;
+    unsigned short s_firstdatazone;
+    unsigned short s_log_zone_size;
+    unsigned int s_max_size;
+    unsigned short s_magic;
+    unsigned short s_state;
+    unsigned int s_zones;
+} superBlock;
+
+// inode struct
+typedef struct inode {
+    unsigned short i_mode;
+    unsigned short i_uid;
+    unsigned int i_size;
+    unsigned int i_time;
+    unsigned char i_gid;
+    unsigned char i_nlinks;
+    unsigned short i_zone[9];
+} inode;
+
 // DEFINE FUNCTIONS
 // help
 void help(); 		// lists all commands
@@ -15,7 +41,7 @@ int minimount(char *); 	// 0 on success, 1 on error
 int miniumount(int); 	// 0 on success, 1 on error
 
 // showsuper
-void showsuper();	// prints values of properties in superblock
+void showsuper(int);	// prints values of properties in superblock
 
 // showzone
 // -------- 		// not sure yet
@@ -25,22 +51,26 @@ void showsuper();	// prints values of properties in superblock
 
 // quit 		// this doesn't actually need a method
 
-// make the superblock struct
-// make the inode struct
 
 int main(int argc, char *argv[]) {
     printf("\n...help()...\n");
     help();
+
     printf("\n...traverse()...\n");
     //traverse(argc, argv);
+
     printf("\n...minimount()...\n");
-    //int fd = minimount(argv[0]);
-    int fd = minimount("imagefile.img");
-    printf("FD: %d", fd);
-    printf("\n...miniumount()...\n");
+    int fd = minimount(argv[1]);
+    //int fd = minimount("imagefile.img");
     if (fd == -1) {
         printf("invalid file descriptor");
     }
+    printf("FD: %d", fd);
+
+    printf("\n...showsuper()...\n");
+    showsuper(fd);
+
+    printf("\n...miniumount()...\n");
     if (miniumount(fd) == 1) {
         printf("miniumount() failed");
     } else {
@@ -85,8 +115,26 @@ int miniumount(int fd) {
 // showsuper
 //     this just calls read(fd, superblock, sizeof(struct superblock));
 //     and then a bunch of print statements to print out all of the properties of the superblock
-void showsuper() {
+void showsuper(int fd) {
+    superBlock superblock;
+
     printf("\nthis is from the superblock.\n");
+    lseek(fd, 1024, SEEK_SET);
+    if (read(fd, &superblock, sizeof(superblock)) != sizeof(superblock)) {
+        perror("Could not read disk image to find superblock");
+        return; // exit function
+    }
+
+    printf("\ns_ninodes:        %hu\n", superblock.s_ninodes);
+    printf("s_nzones:         %hu\n", superblock.s_nzones);
+    printf("s_imap_blocks:    %hu\n", superblock.s_imap_blocks);
+    printf("s_zmap_blocks:    %hu\n", superblock.s_zmap_blocks);
+    printf("s_firstdatazone:  %hu\n", superblock.s_firstdatazone);
+    printf("s_log_zone_size:  %hu\n", superblock.s_log_zone_size);
+    printf("s_max_size:       %u\n", superblock.s_max_size);
+    printf("s_magic:          0x%04x\n", superblock.s_magic);
+    printf("s_state:          %hu\n", superblock.s_state);
+    printf("s_zones:          %u\n",  superblock.s_zones);
 }
 
 // traverse
