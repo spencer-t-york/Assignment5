@@ -1,4 +1,4 @@
-#include "traverse.h"
+//#include "traverse.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -41,6 +41,9 @@ int miniumount(int); 	// 0 on success, 1 on error
 // showsuper
 void showsuper(int);	// prints values of properties in superblock
 
+// traverse
+void traverse(int);
+
 // showzone
 // -------- 		// not sure yet
 
@@ -54,9 +57,6 @@ int main(int argc, char *argv[]) {
     printf("\n...help()...\n");
     help();
 
-    printf("\n...traverse()...\n");
-    //traverse(argc, argv);
-
     printf("\n...minimount()...\n");
     int fd = minimount(argv[1]);
     //int fd = minimount("imagefile.img");
@@ -67,6 +67,9 @@ int main(int argc, char *argv[]) {
 
     printf("\n...showsuper()...\n");
     showsuper(fd);
+
+    printf("\n...traverse()...\n");
+    traverse(fd);
 
     printf("\n...miniumount()...\n");
     if (miniumount(fd) == 1) {
@@ -136,15 +139,45 @@ void showsuper(int fd) {
 }
 
 // traverse
-//     I think this is just ls command which I've done already in CIS 340
-//     this is linked already in the traverse.c and .h file
-void traverse() {
+void traverse(int fd) {
     // goal is to read root inode
+    inode inode;
+    superBlock superblock;
+    
     // read superblock and use its properties to calculate position of inode table
+    lseek(fd, 1024, SEEK_SET);
+    if (read(fd, &superblock, sizeof(superblock)) != sizeof(superblock)) {
+        perror("Could not read disk image to find superblock (from traverse)");
+        return; // exit function
+    }
+    
+    // calculate position of inode table
+    //int block_size = superblock.s_log_zone_size;
+    //int first_inode_index = block_size * 4; // in bytes
+    lseek(fd, 1024 * superblock.s_firstdatazone, SEEK_SET); // based on diagram, inodes start at the 5th block
+    
     // read the root inode
+    if (read(fd, &inode, sizeof(inode)) != sizeof(inode)) {
+        perror("Could not read disk image to find inode (from traverse)");
+        return; // exit function
+    }
+    
     // print inode data
+    printf("\ninode data:\n");
+    printf("i_mode:   %hu\n", inode.i_mode);
+    printf("i_uid:    %hu\n", inode.i_uid);
+    printf("i_size:   %u\n", inode.i_size);
+    printf("i_time:   %u\n", inode.i_time);
+    printf("i_gid:    %u\n", inode.i_gid);
+    printf("i_nlinks: %u\n", inode.i_nlinks);
+    printf("i_zone(%d):   \n");
+    for (int i = 0; i < sizeof(inode.i_zone)/sizeof(inode.i_zone[0]); i++) {
+        printf("i_mode[%d]:   %hu\n", i, inode.i_zone[i]); 
+    }
+
     // do this recursively maybe?
 }
+
 // showzone
 //     Not sure what this is yet...
 // showfile
