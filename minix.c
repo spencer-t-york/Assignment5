@@ -5,32 +5,30 @@
 #include <fcntl.h>
 
 // DEFINE STRUCTS
-// superblock struct
 typedef struct superBlock {
-    unsigned short s_ninodes;
-    unsigned short s_nzones;
-    unsigned short s_imap_blocks;
-    unsigned short s_zmap_blocks;
-    unsigned short s_firstdatazone;
-    unsigned short s_log_zone_size;
-    unsigned int s_max_size;
-    unsigned short s_magic;
-    unsigned short s_state;
-    unsigned int s_zones;
+    unsigned short s_ninodes;        // number of nodes
+    unsigned short s_nzones;         // number of zones
+    unsigned short s_imap_blocks;    // number of i-node bit map blocks
+    unsigned short s_zmap_blocks;    // number of zone bit map blocks
+    unsigned short s_firstdatazone;  // first data zone
+    unsigned short s_log_zone_size;  // log 2(zonesize/blocksize)
+    unsigned int s_max_size;         // max file size
+    unsigned short s_magic;          // magic number (indicates which minix version i think?)
+    unsigned short s_state;          // clean unmount or no (clean or dirty)
+    unsigned int s_zones;            // total number of zones (data blocks) in the filesystem
 } superBlock;
 
 // inode struct
 typedef struct inode {
-    unsigned short i_mode;
-    unsigned short i_uid;
-    unsigned int i_size;
-    unsigned int i_time;
-    unsigned char i_gid;
-    unsigned char i_nlinks;
-    unsigned short i_zone[9];
+    unsigned short i_mode;           // file type and rwx bit
+    unsigned short i_uid;            // identifies the use who owns the file
+    unsigned int i_size;             // number of bytes in the file (file size)
+    unsigned int i_time;             // in seconds, since Jan 1, 1970
+    unsigned char i_gid;             // Directories lisiting this i-node/owner's group
+    unsigned char i_nlinks;          // number of hard links attached to the inode
+    unsigned short i_zone[9];        // pointers to data blocks
 } inode;
 
-// DEFINE FUNCTIONS
 // help
 void help(); 		// lists all commands
 
@@ -140,6 +138,13 @@ void showsuper(int fd) {
 // traverse
 //     I think this is just ls command which I've done already in CIS 340
 //     this is linked already in the traverse.c and .h file
+void traverse() {
+    // goal is to read root inode
+    // read superblock and use its properties to calculate position of inode table
+    // read the root inode
+    // print inode data
+    // do this recursively maybe?
+}
 // showzone
 //     Not sure what this is yet...
 // showfile
