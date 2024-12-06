@@ -152,10 +152,13 @@ void traverse(int fd) {
     }
     
     // calculate position of inode table
-    //int block_size = superblock.s_log_zone_size;
-    //int first_inode_index = block_size * 4; // in bytes
-    lseek(fd, 1024 * superblock.s_firstdatazone, SEEK_SET); // based on diagram, inodes start at the 5th block
-    
+    int block_size = 1024 << superblock.s_log_zone_size;
+    int inode_bitmap_size = superblock.s_imap_blocks * block_size;
+    int zone_bitmap_size  = superblock.s_zmap_blocks * block_size;
+    int inode_table_pos   = 1024 + block_size + inode_bitmap_size + zone_bitmap_size; 
+
+    lseek(fd, inode_table_pos, SEEK_SET); // based on diagram, first inode starts at inode table
+
     // read the root inode
     if (read(fd, &inode, sizeof(inode)) != sizeof(inode)) {
         perror("Could not read disk image to find inode (from traverse)");
@@ -170,9 +173,9 @@ void traverse(int fd) {
     printf("i_time:   %u\n", inode.i_time);
     printf("i_gid:    %u\n", inode.i_gid);
     printf("i_nlinks: %u\n", inode.i_nlinks);
-    printf("i_zone(%d):   \n");
-    for (int i = 0; i < sizeof(inode.i_zone)/sizeof(inode.i_zone[0]); i++) {
-        printf("i_mode[%d]:   %hu\n", i, inode.i_zone[i]); 
+    printf("i_zone:   \n");
+    for (int i = 0; i < 9; i++) {
+        printf("i_zone[%d]:   %hu\n", i, inode.i_zone[i]); 
     }
 
     // do this recursively maybe?
