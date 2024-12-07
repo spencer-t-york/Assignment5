@@ -1,20 +1,21 @@
 #ifndef TRAVERSE_H
 #define TRAVERSE_H
 
-#include <sys/types.h>
-#include <dirent.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <string.h>
+#include <time.h>
 
-struct files { // linked list to point to dirent struct for sorting
-    struct dirent *direntp;
-    struct files *next;
-};
+// traverse
+void traverse(int, int);
 
-struct files *sort(struct files *);
-void mode_to_str(mode_t, char *);
+// convert mode
+void mode_to_str(unsigned short, char *);
+
+// convert number number to letters
 const char* numberToMonth(int);
-void printFiles(struct files *);
-void printFilesL(struct files *, const char *);
-void ls(char dirname[], int, int);
-int traverse(int, char *argv[]);
 
 #endif
