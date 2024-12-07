@@ -10,75 +10,122 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-struct files { // linked list to point to dirent struct for sorting
-    struct dirent *direntp;
-    struct files *next;
-};
+void traverse(int fd, int l_flag) {
+    superBlock superblock;
+    inode inode;
 
-// SORTING FUNCTION
-struct files *sort(struct files *head) {
-    // if 0 or 1 nodes
-    if (head == NULL || head->next == NULL) {
-        return head; // Return if the list is empty or has only one node
+    // read superblock and use its properties to calculate position of inode table
+    lseek(fd, 1024, SEEK_SET);
+    if (read(fd, &superblock, sizeof(superblock)) != sizeof(superblock)) {
+        perror("Could not read disk image to find superblock (from traverse)");
+        return; // exit function
+    }
+    
+    // calculate position of inode table
+    int block_size = 1024 << superblock.s_log_zone_size;
+    int inode_bitmap_size = superblock.s_imap_blocks * block_size;
+    int zone_bitmap_size  = superblock.s_zmap_blocks * block_size;
+    int inode_table_pos   = 1024 + block_size + inode_bitmap_size + zone_bitmap_size; 
+
+    lseek(fd, inode_table_pos, SEEK_SET); // based on diagram, first inode starts at inode table
+    
+    // read the root inode
+    if (read(fd, &inode, sizeof(inode)) != sizeof(inode)) {
+        perror("Could not read disk image to find inode (from traverse)");
+        return; // exit function
+    }
+    
+    // print inode data
+    printf("\ninode data:\n");
+    printf("i_mode:   %hu\n", inode.i_mode);
+    printf("i_uid:    %hu\n", inode.i_uid);
+    printf("i_size:   %u\n",  inode.i_size);
+    printf("i_time:   %u\n",  inode.i_time);
+    printf("i_gid:    %u\n",  inode.i_gid);
+    printf("i_nlinks: %u\n",  inode.i_nlinks);
+    printf("i_zone:   \n");
+    for (int i = 0; i < 9; i++) {
+        printf("i_zone[%d]:   %hu\n", i, inode.i_zone[i]); 
+    }
+    
+    int zone_pos = inode.i_zone[0] * block_size; // positon of first zone
+    lseek(fd, zone_pos, SEEK_SET);
+
+    char zone_data[block_size]; // will hold the content of data zone
+    if (read(fd, zone_data, block_size) != block_size) {
+        perror("Could not read disk image to store directory entries");
+        return; // exit function
     }
 
-    struct files *prev = NULL;
-    struct files *current = head;
-    struct files *last = NULL;
-    bool swapped;
-    int firstCharacterIndex = 0;
+    int offset = 0;
+    while (offset < inode.i_size) {
+        directoryEntry *entry = (directoryEntry *)(zone_data + offset);
 
-    do {
-        swapped = false;
-        current = head;
-        prev = NULL;
-
-        while (current->next != last) {
-            // check if first letter of directory/file1 > first letter of directory/file2 (accounts for '.')
-            if (strcasecmp(current->direntp->d_name + ((current->direntp->d_name[0] == '.') ? 1 : 0),
-                       current->next->direntp->d_name + ((current->next->direntp->d_name[0] == '.') ? 1 : 0)) > 0)
-            {
-                struct files *temp = current->next; // second node
-                current->next = temp->next;         // set first node to point to third
-                temp->next = current;               // set second to point to first
-
-                if (prev == NULL) {
-                    head = temp;         // set the first node to head
-                } else {
-                    prev->next = temp;   // have the previous node point to the swapped node
+	if (entry->inode != 0) {
+	    if (l_flag) {
+	        // find and go to inode position
+		int inode_pos = inode_table_pos + (entry->inode-1) * sizeof(inode);
+		
+		if (lseek(fd, inode_pos, SEEK_SET) == -1) {
+                    perror("ERROR: lseek failed");
+                    continue; // Skip this entry
+                }  
+		
+		if (read(fd, &inode, sizeof(inode)) != sizeof(inode)) {
+                   perror("Could not read disk image to find inode for -l flag");
+                   return; // exit function
                 }
 
-                prev = temp;             // move prev to next node
-                swapped = true;
+		// convert mode to readable string
+		char mode[11];
+		mode_to_str(inode.i_mode, mode);
 
-            } else {
-                prev = current;          // move prev to next node
-                current = current->next; // move current to the next node
-            }
-        }
+		// convert time
+		time_t time = inode.i_time;
+		struct tm *timestruct;
+		timestruct = localtime(&time);
 
-        last = current; // Update last to the last swapped node
-    } while (swapped);
+		int year  = timestruct->tm_year + 1900;
+		const char* month = numberToMonth(timestruct->tm_mon + 1);
+	        int day   = timestruct->tm_mday;	
+                
+		printf("%s %hu %u %s %d %d %s\n",
+                    mode,               // permissions
+                    inode.i_uid,        // owner name
+                    inode.i_size,       // file size in bytes
+                    month, day, year,   // last modified date
+                    entry->name         // file or path name
+                );
 
-    return head;
+	    } else {
+	        printf("%s\n", entry->name);
+	    }
+	}
+
+    // adds size of directory entry properties and null termiator
+	offset += sizeof(entry->inode) + strlen(entry->name) + 1;
+        
+	// account for minix padding of 16 bytes
+	if (offset % 16 != 0) {
+	    offset += 16 - (offset % 16);
+	}    
+    }
 }
 
-// FILE PERMISSIONS FUNCTION
-void mode_to_str(mode_t mode, char *str) {
-    str[0] = (S_ISDIR(mode)) ? 'd' : '-';   // directory indicator
-    str[1] = (mode & S_IRUSR) ? 'r' : '-';  // read  for owner
-    str[2] = (mode & S_IWUSR) ? 'w' : '-';  // write for owner
-    str[3] = (mode & S_IXUSR) ? 'x' : '-';  // exec  for owner
-    str[4] = (mode & S_IRGRP) ? 'r' : '-';  // read  for group
-    str[5] = (mode & S_IWGRP) ? 'w' : '-';  // write for group
-    str[6] = (mode & S_IXGRP) ? 'x' : '-';  // exec  for group
-    str[7] = (mode & S_IROTH) ? 'r' : '-';  // read  for others
-    str[8] = (mode & S_IWOTH) ? 'w' : '-';  // write for others
-    str[9] = (mode & S_IXOTH) ? 'x' : '-';  // exec  for others
-    str[10] = '\0';                         // null terminator
+void mode_to_str(unsigned short mode, char *str) {
+    str[0] = (mode & 0x4000) ? 'd' : '-';  // directory indicator
+    str[1] = (mode & 0x0100) ? 'r' : '-';  // read  for owner
+    str[2] = (mode & 0x0080) ? 'w' : '-';  // write for owner
+    str[3] = (mode & 0x0040) ? 'x' : '-';  // exec  for owner
+    str[4] = (mode & 0x0020) ? 'r' : '-';  // read  for group
+    str[5] = (mode & 0x0010) ? 'w' : '-';  // write for group
+    str[6] = (mode & 0x0008) ? 'x' : '-';  // exec  for group
+    str[7] = (mode & 0x0004) ? 'r' : '-';  // read  for others
+    str[8] = (mode & 0x0002) ? 'w' : '-';  // write for others
+    str[9] = (mode & 0x0001) ? 'x' : '-';  // exec  for others
+    str[10] = '\0';                        // null terminator
 }
 
-// CONVERT NUM TO MONTH NAME FUNCTION
 const char* numberToMonth(int monthNumber) {
     const char* months[] = {
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -87,139 +134,4 @@ const char* numberToMonth(int monthNumber) {
 
     // Return the corresponding month abbreviation
     return months[monthNumber - 1];
-}
-
-// PRINT FUNCTION
-void printFiles(struct files *head) {
-    struct files *current = head;
-    while (current != NULL){
-        printf("%-25s\n", current->direntp->d_name);
-        current = current->next;
-    }
-}
-
-// PRINT FOR L FLAG FUNCTION
-void printFilesL(struct files *head, const char *dirname) {
-    struct stat stats;
-    char fullpath[PATH_MAX];
-    char mode_str[11];
-    struct files *current = head;
-
-   int blockCount = 0; // Total blocks used by files and directories
-
-    // Calculate total blocks first
-    while (current != NULL){
-        snprintf(fullpath, PATH_MAX, "%s/%s", dirname, current->direntp->d_name);
-
-        if (stat(fullpath, &stats) == -1) {
-            perror("stat");
-            return;
-        }
-
-        blockCount += (int)stats.st_blocks;
-
-        current = current->next;
-    }
-
-    printf("total %d\n", (blockCount/2)); // print total block count
-
-    // reset point to head
-    current = head;
-
-
-    while (current != NULL){
-        // builds formatted file path to specified file
-        snprintf(fullpath, PATH_MAX, "%s/%s", dirname, current->direntp->d_name);
-
-        // if file does not exist or cannot be accessed
-        if (stat(fullpath, &stats) == -1) {
-            perror("stat");
-            return;
-        }
-
-        mode_to_str(stats.st_mode, mode_str); // for permissions section
-
-        printf("%s %ld %s %s %ld %s %2d  %d:%d %s\n",
-            mode_str,                                 // permissions
-            stats.st_nlink,                           // number of hard links
-            getpwuid(stats.st_uid)->pw_name,          // owner name
-            getgrgid(stats.st_gid)->gr_name,	      // group name
-            stats.st_size,			      // file size in bytes
-            numberToMonth(			      // convert num to text
-                gmtime(&stats.st_atime)->tm_mon + 1), // month
-            gmtime(&stats.st_atime)->tm_mday,         // day
-            gmtime(&stats.st_atime)->tm_hour,         // hour
-            gmtime(&stats.st_atime)->tm_min,          // minutes
-            current->direntp->d_name                  // file name
-        );
-
-        current = current->next; // advance to next node
-    }
-}
-
-// LS FUNCTION
-void ls(char dirname[], int a, int l) {
-    DIR *dir_ptr;
-
-    struct dirent *direntp;    // temporary variable to hold each directory entry
-    struct files *head = NULL;
-    struct files *current = NULL;
-    struct files *tail = NULL; // always points to the tail
-
-    if ((dir_ptr=opendir(dirname)) == NULL) {
-        fprintf(stderr, "cannot open %s\n", dirname);
-	return;
-    }
-
-    while ((direntp = readdir(dir_ptr)) != NULL) {
-        if (a == 0 && direntp->d_name[0] == '.') { // if 'a' flag is set then skip over
-            continue;                              // files beginning with '.'
-        }
-
-        struct files *new_node = (struct files *)malloc(sizeof(struct files));
-        new_node->direntp = direntp;
-        new_node->next = NULL; // ensure the node after new_node is NULL
-
-        // Add new node to end of linked list
-        if (head == NULL) {
-            // If head is NULL, set head to new_node
-            head = new_node;
-            tail = new_node;
-        } else {
-            // append new_node to the end of the linked list
-            tail->next = new_node;
-            tail = new_node;
-        }
-    }
-
-    head = sort(head); // Sort
-
-    if (l == 0) {      // Print
-        printFiles(head);
-    } else {          // Print Long Listing Format
-        printFilesL(head, dirname);
-    }
-
-    closedir(dir_ptr);
-}
-
-int traverse(int argc, char *argv[]) {
-    if (argc < 2 || argc > 3) {
-        printf("usage: ls directory_name\n");
-    }
-    if (argc == 3) {
-        if (strcmp(argv[1], "-a") == 0) {        // ./a.out -a /directory
-            ls(argv[2], 1, 0);
-        } else if (strcmp(argv[2], "-a") == 0) { // ./a.out /directory -a
-            ls(argv[1], 1, 0);
-        } else if (strcmp(argv[1], "-l") == 0) { // ./a.out -l /directory
-            ls(argv[2], 0, 1);
-        } else if (strcmp(argv[2], "-l") == 0) { // ./a.out /directory -l
-            ls(argv[1], 0, 1);
-        }
-    } else {                                     // ./a.out /directory
-        ls(argv[1], 0, 0);
-    }
-
-    return 0;
 }
