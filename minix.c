@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
+#include <string.h>
 
 // DEFINE STRUCTS
 typedef struct superBlock {
@@ -29,6 +31,12 @@ typedef struct inode {
     unsigned short i_zone[9];        // pointers to data blocks
 } inode;
 
+// directory struct
+typedef struct directoryEntry {
+    unsigned short inode;	     // holds inode number (i think)
+    char name[0];                  // holds file or directory name (i think)
+} directoryEntry;
+
 // help
 void help(); 		// lists all commands
 
@@ -45,7 +53,7 @@ void showsuper(int);	// prints values of properties in superblock
 void traverse(int);
 
 // showzone
-// -------- 		// not sure yet
+void showzone(int);	// not sure yet
 
 // showfile
 // -------- 		// not sure yet
@@ -70,6 +78,9 @@ int main(int argc, char *argv[]) {
 
     printf("\n...traverse()...\n");
     traverse(fd);
+
+    printf("\n...showzone()...\n");
+    showzone(fd);
 
     printf("\n...miniumount()...\n");
     if (miniumount(fd) == 1) {
@@ -140,10 +151,10 @@ void showsuper(int fd) {
 
 // traverse
 void traverse(int fd) {
-    // goal is to read root inode
-    inode inode;
     superBlock superblock;
-    
+    inode inode;
+    //directoryEntry direntry;
+
     // read superblock and use its properties to calculate position of inode table
     lseek(fd, 1024, SEEK_SET);
     if (read(fd, &superblock, sizeof(superblock)) != sizeof(superblock)) {
@@ -158,7 +169,7 @@ void traverse(int fd) {
     int inode_table_pos   = 1024 + block_size + inode_bitmap_size + zone_bitmap_size; 
 
     lseek(fd, inode_table_pos, SEEK_SET); // based on diagram, first inode starts at inode table
-
+    
     // read the root inode
     if (read(fd, &inode, sizeof(inode)) != sizeof(inode)) {
         perror("Could not read disk image to find inode (from traverse)");
@@ -169,21 +180,70 @@ void traverse(int fd) {
     printf("\ninode data:\n");
     printf("i_mode:   %hu\n", inode.i_mode);
     printf("i_uid:    %hu\n", inode.i_uid);
-    printf("i_size:   %u\n", inode.i_size);
-    printf("i_time:   %u\n", inode.i_time);
-    printf("i_gid:    %u\n", inode.i_gid);
-    printf("i_nlinks: %u\n", inode.i_nlinks);
+    printf("i_size:   %u\n",  inode.i_size);
+    printf("i_time:   %u\n",  inode.i_time);
+    printf("i_gid:    %u\n",  inode.i_gid);
+    printf("i_nlinks: %u\n",  inode.i_nlinks);
     printf("i_zone:   \n");
     for (int i = 0; i < 9; i++) {
         printf("i_zone[%d]:   %hu\n", i, inode.i_zone[i]); 
     }
+    
+    int zone_pos = inode.i_zone[0] * block_size; // positon of first zone
+    lseek(fd, zone_pos, SEEK_SET);
 
-    // do this recursively maybe?
+    char zone_data[block_size]; // will hold the content of data zone
+    if (read(fd, zone_data, block_size) != block_size) {
+        perror("Could not read disk image to store directory entries");
+        return; // exit function
+    }
+    
+    int offset = 0;
+    while (offset < inode.i_size) {
+        directoryEntry *entry = (directoryEntry *)(zone_data + offset);
+
+	if (entry->inode != 0) {
+	    printf("Inode: %hu, File Name: %s\n", entry->inode, entry->name);
+	}
+
+        // adds size of directory entry properties and null termiator
+	offset += sizeof(entry->inode) + strlen(entry->name) + 1;
+        
+	// account for minix padding of 16 bytes
+	if (offset % 16 != 0) {
+	    offset += 16 - (offset % 16);
+	}
+    } 
 }
 
 // showzone
-//     Not sure what this is yet...
+void showzone(int fd) {
+    int zone_number;
+    printf("Enter the zone number: ");
+    scanf("%d", &zone_number);
+
+    int zone_start = zone_number * 1024;
+    char zone_data[1024];
+
+    // Still need to put in data reading mechanism
+    if (read(fd, zone_data, sizeof(zone_data)) != sizeof(zone_data)) {
+        perror("Could not read disk image for zone_data");
+        return; // exit function
+    }
+    for (int i = 0; i < 1024; i++) {
+        if (isprint(zone_data[i])) {
+            printf("%c", zone_data[i]);
+        }
+        else {
+            printf(" ");
+        }
+    }
+
+    printf("\n");
+}
+
 // showfile
-//     Not sure what this is yet...
+
+
 // quit
 //     just break out of program loop
