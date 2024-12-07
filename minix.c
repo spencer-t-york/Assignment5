@@ -156,7 +156,7 @@ void showsuper(int fd) {
     printf("s_state:          %hu\n", superblock.s_state);
     printf("s_zones:          %u\n",  superblock.s_zones);
 }
-/*
+
 // traverse
 void traverse(int fd, int l_flag) {
     superBlock superblock;
@@ -283,7 +283,7 @@ const char* numberToMonth(int monthNumber) {
     // Return the corresponding month abbreviation
     return months[monthNumber - 1];
 }
-*/
+
 // showzone
 void showzone(int fd) {
     int zone_number;
